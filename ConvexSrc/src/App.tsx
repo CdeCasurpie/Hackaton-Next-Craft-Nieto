@@ -1,13 +1,17 @@
-import './App.css'
+import Landing from "./Landing";
+import { AnimatedBackground } from "./Background";
 
-function App() {
+export default function App() {
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>🚀 Hackathon Project</h1>
-      <p>La plantilla básica ha sido eliminada y Convex está 100% conectado.</p>
-      <p>¡Dime cuáles son los módulos y empezamos!</p>
-    </div>
-  )
+    <>
+      {/* 
+        Por ahora, renderizamos directamente la Landing Page sin lógica de Auth,
+        tal como pediste para probar Convex a fondo más adelante sin bloqueos.
+      */}
+      <Landing
+        onGetStarted={(role) => console.log("Registrar: ", role)}
+        onSignIn={() => console.log("Iniciar sesión")}
+      />
+    </>
+  );
 }
-
-export default App
