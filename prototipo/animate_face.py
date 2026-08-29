@@ -39,31 +39,18 @@ def get_phoneme(char):
     return 'idle'
 
 def build_viseme_track(text, audio_duration):
-    """
-    Construye una pista de visemas sincronizada con la duración real del audio.
-    Cada carácter recibe un peso de tiempo proporcional y se mapea a segundos reales.
-    """
-    # Dar pesos relativos a cada carácter
     weights = []
     for char in text:
         c = char.lower()
-        if c in 'aeiouáéíóú':
-            weights.append(3.0)   # vocales duran más
-        elif c == ' ':
-            weights.append(1.5)   # pausa entre palabras
-        elif c in '.,!?¿¡':
-            weights.append(4.0)   # pausas de puntuación
-        else:
-            weights.append(1.0)   # consonantes rápidas
+        if c in 'aeiouáéíóú': weights.append(3.0)
+        elif c == ' ': weights.append(1.5)
+        elif c in '.,!?¿¡': weights.append(4.0)
+        else: weights.append(1.0)
 
     total_weight = sum(weights)
-    if total_weight == 0:
-        return []
+    if total_weight == 0: return []
 
-    # Dejar un pequeño margen al final para que la boca se cierre
     usable_duration = audio_duration * 0.92
-
-    # Convertir pesos a tiempos absolutos (inicio, fin, visema, char_index)
     track = []
     current_time = 0.0
     for i, (char, weight) in enumerate(zip(text, weights)):
@@ -76,9 +63,7 @@ def build_viseme_track(text, audio_duration):
             'char_index': i,
         })
         current_time += char_duration
-
     return track
-
 
 def get_rotation_matrix(rx, ry, rz):
     Rx = np.array([[1, 0, 0], [0, math.cos(rx), -math.sin(rx)], [0, math.sin(rx), math.cos(rx)]])
@@ -86,16 +71,17 @@ def get_rotation_matrix(rx, ry, rz):
     Rz = np.array([[math.cos(rz), -math.sin(rz), 0], [math.sin(rz), math.cos(rz), 0], [0, 0, 1]])
     return Rz @ Ry @ Rx
 
-def draw_face_3d(image, landmarks, connections_data, width, height, time_t, is_speaking):
-    float_y = math.sin(time_t * 2.0) * 15.0
-
+def draw_face_3d(image, landmarks, connections_data, width, height, time_t, is_speaking, head_rot_x, head_rot_y):
+    float_y = math.sin(time_t * 2.0) * 10.0
+    
+    # Combinamos la rotación de tracking con la animación idle natural
     if is_speaking:
-        rot_x = math.sin(time_t * 4.0) * 0.05 - 0.1
-        rot_y = math.sin(time_t * 3.0) * 0.15
-        rot_z = math.sin(time_t * 2.5) * 0.05
+        rot_x = head_rot_x + (math.sin(time_t * 4.0) * 0.03 - 0.05)
+        rot_y = head_rot_y + (math.sin(time_t * 3.0) * 0.05)
+        rot_z = math.sin(time_t * 2.5) * 0.03
     else:
-        rot_x = math.sin(time_t * 1.5) * 0.05
-        rot_y = math.sin(time_t * 1.0) * 0.1
+        rot_x = head_rot_x + (math.sin(time_t * 1.5) * 0.03)
+        rot_y = head_rot_y + (math.sin(time_t * 1.0) * 0.05)
         rot_z = math.sin(time_t * 0.5) * 0.02
 
     R = get_rotation_matrix(rot_x, rot_y, rot_z)
@@ -141,6 +127,10 @@ def draw_face_3d(image, landmarks, connections_data, width, height, time_t, is_s
 input_queue = queue.Queue()
 audio_ready_queue = queue.Queue()
 
+# Variables globales para el tracking de mirada
+tracking_nx = 0.0
+tracking_ny = 0.0
+
 def input_thread_func():
     while True:
         try:
@@ -151,7 +141,6 @@ def input_thread_func():
             break
 
 def tts_thread_func(text):
-    """Genera el audio TTS y devuelve archivo + duración."""
     filename = f"temp_{int(time.time() * 1000)}.mp3"
     tts = gTTS(text, lang='es', tld='com.mx')
     tts.save(filename)
@@ -159,6 +148,45 @@ def tts_thread_func(text):
     duration = audio_info.info.length
     audio_ready_queue.put((text, filename, duration))
 
+def webcam_tracking_thread():
+    global tracking_nx, tracking_ny
+    cap = cv2.VideoCapture(0)
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    
+    while cap.isOpened():
+        success, frame = cap.read()
+        if not success:
+            time.sleep(0.1)
+            continue
+            
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # Reducir resolución para más FPS en la detección
+        small_gray = cv2.resize(gray, (320, 240))
+        faces = face_cascade.detectMultiScale(small_gray, scaleFactor=1.2, minNeighbors=5, minSize=(30, 30))
+        
+        if len(faces) > 0:
+            # Tomar la cara más grande
+            faces = sorted(faces, key=lambda x: x[2]*x[3], reverse=True)
+            x, y, w, h = faces[0]
+            
+            # Centro de la cara
+            cx = x + w/2
+            cy = y + h/2
+            
+            # Normalizar entre -1 y 1
+            nx = (cx / 320.0) * 2.0 - 1.0
+            ny = (cy / 240.0) * 2.0 - 1.0
+            
+            tracking_nx = nx
+            tracking_ny = ny
+        else:
+            # Si no ve a nadie, vuelve a mirar al centro suavemente
+            tracking_nx *= 0.9
+            tracking_ny *= 0.9
+
+        time.sleep(0.05) # ~20 FPS tracking
+        
+    cap.release()
 
 def main():
     WIDTH, HEIGHT = 800, 600
@@ -166,18 +194,19 @@ def main():
     frame_delay = 1.0 / FPS
 
     print("=" * 50)
-    print("  ANIMADOR 3D + VOZ SINCRONIZADA")
+    print("  ANIMADOR 3D + VOZ + SEGUIMIENTO FACIAL")
     print("=" * 50)
+    print("La cámara se encenderá en breve. ¡Mueve tu cabeza!")
     print("Escribe tu texto y presiona ENTER.")
-    print("La boca se sincroniza exactamente con el audio.")
     print("Escribe 'salir' para cerrar.")
     print("=" * 50)
 
     threading.Thread(target=input_thread_func, daemon=True).start()
+    threading.Thread(target=webcam_tracking_thread, daemon=True).start()
 
     current_text = ""
-    viseme_track = []       # Pista de visemas con tiempos absolutos
-    audio_start_time = None # Momento en que arrancó el audio
+    viseme_track = []
+    audio_start_time = None
     audio_duration = 0.0
     is_generating = False
 
@@ -187,12 +216,15 @@ def main():
 
     SMOOTHING = 0.35
     start_time = time.time()
+    
+    # Variables de suavizado de cámara
+    current_rot_x = 0.0
+    current_rot_y = 0.0
 
     while True:
         loop_start = time.time()
         time_t = loop_start - start_time
 
-        # 1. Leer input del usuario
         if not input_queue.empty():
             msg = input_queue.get()
             if msg.lower() == 'salir':
@@ -201,31 +233,20 @@ def main():
             current_text = msg
             threading.Thread(target=tts_thread_func, args=(msg,), daemon=True).start()
 
-        # 2. Audio listo → arrancar reproducción + animación al mismo tiempo
         if not audio_ready_queue.empty():
             text, audio_file, duration = audio_ready_queue.get()
             is_generating = False
             audio_duration = duration
-
-            # Construir la pista de visemas basada en la duración REAL del audio
             viseme_track = build_viseme_track(text, audio_duration)
-
-            # Reproducir audio
             pygame.mixer.music.load(audio_file)
             pygame.mixer.music.play()
-
-            # Marcar el inicio exacto
             audio_start_time = time.time()
 
-        # 3. Determinar estado actual basado en tiempo real transcurrido
         is_speaking = False
         if audio_start_time is not None:
             elapsed = time.time() - audio_start_time
-
             if elapsed < audio_duration:
                 is_speaking = True
-
-                # Buscar en qué visema estamos según el tiempo real
                 found = False
                 for item in viseme_track:
                     if item['start'] <= elapsed < item['end']:
@@ -233,35 +254,38 @@ def main():
                         current_char_index = item['char_index']
                         found = True
                         break
-
                 if not found:
-                    # Pasamos el último visema, ir a idle
                     target_shape = phoneme_shapes['idle']
                     current_char_index = len(current_text)
             else:
-                # Audio terminó
                 target_shape = phoneme_shapes['idle']
                 current_char_index = len(current_text)
                 if not pygame.mixer.music.get_busy():
-                    audio_start_time = None  # Reset completo
+                    audio_start_time = None
         else:
             target_shape = phoneme_shapes['idle']
 
-        # Interpolación fluida EMA
         current_shape = current_shape + (target_shape - current_shape) * SMOOTHING
+
+        # ─── Tracking de Mirada ─────────────────────────────────────────
+        # Mapeamos la posición -1 a 1 de la cámara a ángulos de rotación de cabeza
+        # Recordar que la cámara hace efecto espejo, ajustamos el signo:
+        target_rot_x = tracking_ny * 0.4  # arriba/abajo
+        target_rot_y = -tracking_nx * 0.5 # izquierda/derecha
+        
+        # Suavizar el movimiento de la cabeza
+        current_rot_x += (target_rot_x - current_rot_x) * 0.1
+        current_rot_y += (target_rot_y - current_rot_y) * 0.1
 
         # ─── Renderizado ────────────────────────────────────────────────
         image = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
         cv2.circle(image, (WIDTH // 2, HEIGHT // 2), 300, (20, 10, 10), -1)
 
-        draw_face_3d(image, current_shape, connections, WIDTH, HEIGHT, time_t, is_speaking)
+        draw_face_3d(image, current_shape, connections, WIDTH, HEIGHT, time_t, is_speaking, current_rot_x, current_rot_y)
 
-        # Subtítulos
         if current_text:
-            if is_speaking:
-                display_text = current_text[:current_char_index + 1]
-            else:
-                display_text = current_text
+            if is_speaking: display_text = current_text[:current_char_index + 1]
+            else: display_text = current_text
 
             font = cv2.FONT_HERSHEY_DUPLEX
             text_size = cv2.getTextSize(display_text, font, 1.0, 2)[0]
@@ -284,15 +308,10 @@ def main():
             break
 
     cv2.destroyAllWindows()
-
-    # Limpiar archivos temporales
     for file in os.listdir():
         if file.startswith("temp_") and file.endswith(".mp3"):
-            try:
-                os.remove(file)
-            except:
-                pass
-
+            try: os.remove(file)
+            except: pass
 
 if __name__ == '__main__':
     main()
