@@ -103,7 +103,7 @@ export function Navbar({ onGetStarted, onSignIn, userProfile, onGoToDashboard, o
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
           <button onClick={onGoHome} className="text-3xl tracking-tight text-white hover:opacity-80 transition text-left font-logo flex items-center gap-3">
-            <img src="/logo.png" alt="Atenea" className="w-8 h-8 rounded-full" />
+            <img src="./logo.png" alt="Atenea" className="w-8 h-8 rounded-full" />
             Atenea
           </button>
         </div>
@@ -269,7 +269,7 @@ function Hero() {
         transition={{ duration: 1, ease: "easeOut" }}
       >
         <motion.img 
-          src="/logo.png" 
+          src="./logo.png" 
           alt="Atenea Logo" 
           className="w-full max-w-md lg:max-w-lg object-contain"
           style={{ filter: "drop-shadow(0 0 40px rgba(244,114,134,0.3))" }}
@@ -475,11 +475,6 @@ export default function Landing(props: LandingProps) {
         <CTA {...props} />
       </main>
       <Footer />
-
-      {/* Mascota fija en la esquina inferior derecha */}
-      <div className="fixed bottom-4 right-4 z-40 hidden sm:block">
-        <Mascot />
-      </div>
     </div>
   );
 }
