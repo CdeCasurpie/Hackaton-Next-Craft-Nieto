@@ -5,6 +5,13 @@ import time
 import threading
 import queue
 import math
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame
+from gtts import gTTS
+
+# Inicializar motor de audio
+pygame.mixer.init()
 
 # ─── Cargar datos ───────────────────────────────────────────────────────────
 with open('landmarks.json', 'r') as f:
@@ -35,15 +42,14 @@ def text_to_viseme_sequence(text):
     for i, char in enumerate(text):
         viseme = get_phoneme(char)
         char_lower = char.lower()
-        # Velocidades para español fluido (~30 FPS)
         if char_lower in 'aeiouáéíóú':
-            duration = 4  # vocales un poco más largas (~130ms)
+            duration = 4
         elif char_lower == ' ':
-            duration = 3  # pausas entre palabras cortas (~100ms)
+            duration = 3
         elif char_lower in '.,!?¿¡':
-            duration = 10 # pausas largas para puntuación
+            duration = 10
         else:
-            duration = 2  # consonantes son rápidas en español (~66ms)
+            duration = 2
             
         sequence.append({
             'viseme': viseme,
@@ -72,7 +78,6 @@ def draw_face_3d(image, landmarks, connections_data, width, height, time_t, is_s
         rot_z = math.sin(time_t * 0.5) * 0.02
         
     R = get_rotation_matrix(rot_x, rot_y, rot_z)
-
     cam_w, cam_h = 640, 480
     xs = (landmarks[:, 0] - 0.5) * cam_w
     ys = (landmarks[:, 1] - 0.5) * cam_h
@@ -111,7 +116,9 @@ def draw_face_3d(image, landmarks, connections_data, width, height, time_t, is_s
         cv2.line(image, points_2d[s], points_2d[e], (150, 150, 150), 2, cv2.LINE_AA)
 
 
+# ─── Hilos de Entrada y TTS ───────────────────────────────────────────────
 input_queue = queue.Queue()
+tts_queue = queue.Queue()
 
 def input_thread_func():
     while True:
@@ -122,13 +129,25 @@ def input_thread_func():
         except EOFError:
             break
 
+def tts_thread_func(text):
+    # Generar el audio y guardarlo
+    tts = gTTS(text, lang='es', tld='com.mx') # tld='com.mx' para acento latino
+    filename = f"temp_{int(time.time())}.mp3"
+    tts.save(filename)
+    # Avisar al hilo principal que el audio está listo
+    tts_queue.put((text, filename))
+
 def main():
     WIDTH, HEIGHT = 800, 600
     FPS = 30
     frame_delay = 1.0 / FPS
 
     print("=" * 50)
-    print("  ANIMADOR 3D FLUIDO (ESPAÑOL)")
+    print("  ANIMADOR 3D FLUIDO + VOZ EN TIEMPO REAL")
+    print("=" * 50)
+    print("La ventana gráfica ya está abierta.")
+    print("Escribe aquí tu texto y presiona ENTER.")
+    print("Generando voz (tarda ~1 segundo)...")
     print("=" * 50)
 
     threading.Thread(target=input_thread_func, daemon=True).start()
@@ -142,24 +161,38 @@ def main():
     target_shape = phoneme_shapes['idle'].copy()
     current_char_index = 0
     
-    # Factor de suavizado (EMA). Mientras más bajo, más ligado/líquido.
-    # 0.35 simula muy bien la coarticulación del lenguaje humano.
     SMOOTHING = 0.35 
-    
     start_time = time.time()
+    
+    is_generating_audio = False
 
     while True:
         loop_start = time.time()
         time_t = loop_start - start_time
 
-        # Revisar nuevos mensajes
+        # 1. Leer entrada del usuario y arrancar generación de audio
         if not input_queue.empty():
             msg = input_queue.get()
             if msg.lower() == 'salir':
                 break
+            is_generating_audio = True
+            threading.Thread(target=tts_thread_func, args=(msg,), daemon=True).start()
+
+        # 2. Revisar si el audio ya se generó
+        if not tts_queue.empty():
+            msg, audio_file = tts_queue.get()
+            is_generating_audio = False
+            
+            # Cargar y reproducir audio
+            pygame.mixer.music.load(audio_file)
+            pygame.mixer.music.play()
+            
+            # Preparar la animación
             current_text = msg
             sequence = text_to_viseme_sequence(msg)
             
+            # Pequeño ajuste: calcular duración total del audio vs duración de animación
+            # Para un hackathon, simplemente arrancamos a la vez.
             timeline = sequence
             anim_index = 0
             frame_in_anim = 0
@@ -167,9 +200,11 @@ def main():
             if len(timeline) > 0:
                 target_shape = phoneme_shapes[timeline[0]['viseme']].copy()
 
-        is_speaking = (anim_index < len(timeline))
+        # Verifica si seguimos reproduciendo audio (para mantener la cara activa si hay desfase)
+        is_playing = pygame.mixer.music.get_busy()
+        is_speaking = (anim_index < len(timeline)) or is_playing
 
-        if is_speaking:
+        if anim_index < len(timeline):
             current_step = timeline[anim_index]
             target_shape = phoneme_shapes[current_step['viseme']]
             current_char_index = current_step['char_index']
@@ -181,10 +216,13 @@ def main():
                 if anim_index < len(timeline):
                     target_shape = phoneme_shapes[timeline[anim_index]['viseme']]
         else:
-            target_shape = phoneme_shapes['idle']
+            # Si se acabó el texto pero el audio sigue, intenta mantener la boca un poco abierta/moviéndose
+            if is_playing:
+                target_shape = phoneme_shapes.get('A', phoneme_shapes['idle'])
+            else:
+                target_shape = phoneme_shapes['idle']
 
-        # APLICAR SUAVIZADO FLUIDO (Interpolación EMA Constante)
-        # En lugar de saltar y frenar, la boca "fluye" constantemente hacia el fonema actual
+        # Interpolación fluida
         current_shape = current_shape + (target_shape - current_shape) * SMOOTHING
 
         # Renderizado
@@ -195,7 +233,7 @@ def main():
 
         if current_text:
             display_text = current_text[:current_char_index+1]
-            if not is_speaking:
+            if not is_speaking and not is_playing:
                 display_text = current_text
                 
             font = cv2.FONT_HERSHEY_DUPLEX
@@ -204,11 +242,15 @@ def main():
             text_y = HEIGHT - 50
             
             cv2.putText(image, display_text, (text_x+2, text_y+2), font, 1.0, (0, 0, 0), 4)
-            cv2.putText(image, display_text, (text_x, text_y), font, 1.0, (255, 255, 255), 2)
+            if is_generating_audio:
+                cv2.putText(image, display_text, (text_x, text_y), font, 1.0, (100, 100, 100), 2)
+                cv2.putText(image, "Pensando...", (10, 30), font, 0.7, (0, 255, 255), 1)
+            else:
+                cv2.putText(image, display_text, (text_x, text_y), font, 1.0, (255, 255, 255), 2)
 
         cv2.imshow('Animador Facial 3D', image)
 
-        # Control exacto de FPS
+        # Control FPS
         elapsed = time.time() - loop_start
         wait_time = max(1, int(frame_delay * 1000 - elapsed * 1000))
         key = cv2.waitKey(wait_time) & 0xFF
@@ -216,6 +258,12 @@ def main():
             break
 
     cv2.destroyAllWindows()
+    
+    # Limpiar archivos de audio temporales
+    for file in os.listdir():
+        if file.startswith("temp_") and file.endswith(".mp3"):
+            try: os.remove(file)
+            except: pass
 
 if __name__ == '__main__':
     main()
