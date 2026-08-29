@@ -105,7 +105,7 @@ export const getPerfilPublicoMentor = query({
 });
 
 export const crearResena = mutation({
-  args: { mentorId: v.id("mentors"), studentId: v.id("users"), publicacionId: v.union(v.id("pubPuntual"), v.id("pubSolicitudMentoria")), puntuacion: v.number(), comentario: v.string() },
+  args: { mentorId: v.id("mentors"), studentId: v.id("users"), publicacionId: v.union(v.id("pubPuntual"), v.id("pubSolicitudMentoria"), v.id("pubAnuncioMentor")), puntuacion: v.number(), comentario: v.string() },
   handler: async (ctx, args) => {
     await ctx.db.insert("resenas", { ...args, votosUtiles: 0 });
     // Recalcular promedio de calificación del mentor

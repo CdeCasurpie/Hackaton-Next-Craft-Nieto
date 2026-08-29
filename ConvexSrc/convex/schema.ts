@@ -102,7 +102,7 @@ export default defineSchema({
   resenas: defineTable({
     mentorId: v.id("mentors"),
     studentId: v.id("users"),
-    publicacionId: v.union(v.id("pubPuntual"), v.id("pubSolicitudMentoria")),
+    publicacionId: v.union(v.id("pubPuntual"), v.id("pubSolicitudMentoria"), v.id("pubAnuncioMentor")),
     puntuacion: v.number(), 
     comentario: v.string(),
     votosUtiles: v.number(), // NUEVO: Para rankear la reseña por importancia

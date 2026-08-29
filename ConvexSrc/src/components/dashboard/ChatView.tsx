@@ -57,7 +57,7 @@ export function ChatView({ role }: ChatViewProps) {
       {/* Ventana de Chat */}
       <div className="flex-1 flex flex-col bg-ink/50">
         {activeChatId ? (
-          <ActiveChatWindow chatId={activeChatId as any} role={role} />
+          <ActiveChatWindow chat={chats?.find(c => c._id === activeChatId)} role={role} />
         ) : (
           <div className="flex-1 grid place-items-center text-slate-500">
             <p>Selecciona un chat para empezar a escribir.</p>
@@ -68,10 +68,12 @@ export function ChatView({ role }: ChatViewProps) {
   );
 }
 
-function ActiveChatWindow({ chatId, role }: { chatId: any; role: string }) {
-  const mensajes = useQuery(api.chats.getHistorialChat, { chatId });
+function ActiveChatWindow({ chat, role }: { chat: any; role: string }) {
+  const chatId = chat?._id;
+  const mensajes = useQuery(api.chats.getHistorialChat, chatId ? { chatId } : "skip");
   const enviar = useMutation(api.chats.enviarMensaje);
   const cerrarChat = useMutation(api.chats.actualizarEstadoChat);
+  const crearResena = useMutation(api.users.crearResena);
 
   const currentUser = useQuery(api.users.getCurrentUser);
   
@@ -80,9 +82,11 @@ function ActiveChatWindow({ chatId, role }: { chatId: any; role: string }) {
   const [reviewStars, setReviewStars] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
 
+  if (!chat) return null;
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!texto.trim()) return;
+    if (!texto.trim() || chat.estado === "cerrado") return;
     await enviar({ chatId, contenido: texto });
     setTexto("");
   };
@@ -95,15 +99,36 @@ function ActiveChatWindow({ chatId, role }: { chatId: any; role: string }) {
     }
   };
 
+  const handleSubmitReview = async () => {
+    if (!chat.mentorId || !chat.origenId || !currentUser) return;
+    
+    try {
+      await crearResena({
+        mentorId: chat.mentorId,
+        studentId: currentUser._id,
+        publicacionId: chat.origenId,
+        puntuacion: reviewStars,
+        comentario: reviewComment
+      });
+      toast.success("¡Gracias por tu reseña! Tu opinión ayuda a otros estudiantes.");
+      setShowReview(false);
+      setReviewComment("");
+    } catch (e) {
+      toast.error("Error al guardar la reseña.");
+    }
+  };
+
   return (
     <>
       {/* Context Banner */}
       <div className="p-3 border-b border-white/10 bg-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm">
-          <CheckCircle className="w-4 h-4 text-brand-2" />
-          <span className="text-slate-300">Chat activo</span>
+          <CheckCircle className={`w-4 h-4 ${chat.estado === "cerrado" ? "text-slate-500" : "text-brand-2"}`} />
+          <span className="text-slate-300">
+            {chat.estado === "cerrado" ? "Chat cerrado" : "Chat activo"}
+          </span>
         </div>
-        {role === "student" && (
+        {role === "student" && chat.estado !== "cerrado" && (
           <button 
             onClick={handleFinalize}
             className="text-xs bg-brand-2/10 text-brand-2 px-3 py-1 rounded-lg hover:bg-brand-2/20 transition border border-brand-2/20"
@@ -129,20 +154,26 @@ function ActiveChatWindow({ chatId, role }: { chatId: any; role: string }) {
       </div>
       
       {/* Input */}
-      <div className="p-4 border-t border-white/10 bg-white/5">
-        <form onSubmit={handleSend} className="flex gap-3">
-          <input 
-            type="text" 
-            value={texto} 
-            onChange={e => setTexto(e.target.value)}
-            placeholder="Escribe un mensaje..." 
-            className="flex-1 bg-ink border border-white/10 rounded-full px-5 py-2.5 text-sm text-white focus:outline-none focus:border-brand"
-          />
-          <button type="submit" className="bg-brand-2 hover:bg-white text-ink-soft font-bold px-6 rounded-full transition text-sm">
-            Enviar
-          </button>
-        </form>
-      </div>
+      {chat.estado !== "cerrado" ? (
+        <div className="p-4 border-t border-white/10 bg-white/5">
+          <form onSubmit={handleSend} className="flex gap-3">
+            <input 
+              type="text" 
+              value={texto} 
+              onChange={e => setTexto(e.target.value)}
+              placeholder="Escribe un mensaje..." 
+              className="flex-1 bg-ink border border-white/10 rounded-full px-5 py-2.5 text-sm text-white focus:outline-none focus:border-brand"
+            />
+            <button type="submit" className="bg-brand-2 hover:bg-white text-ink-soft font-bold px-6 rounded-full transition text-sm">
+              Enviar
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="p-4 border-t border-white/10 bg-white/5 text-center">
+          <p className="text-slate-500 text-sm">Este chat ha sido cerrado. No se pueden enviar más mensajes.</p>
+        </div>
+      )}
 
       {/* Review Modal */}
       {showReview && (
@@ -165,11 +196,7 @@ function ActiveChatWindow({ chatId, role }: { chatId: any; role: string }) {
               className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:border-brand outline-none h-24 mb-4"
             />
             <button
-              onClick={async () => {
-                // We need mentorId and publicacionId from the chat - use a simplified approach
-                toast.success("¡Gracias por tu reseña! Tu opinión ayuda a otros estudiantes.");
-                setShowReview(false);
-              }}
+              onClick={handleSubmitReview}
               className="w-full bg-brand hover:bg-brand-2 text-white font-bold py-3 rounded-lg transition"
             >
               Enviar Reseña
