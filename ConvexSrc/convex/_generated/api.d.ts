@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as chats from "../chats.js";
 import type * as http from "../http.js";
 import type * as publications from "../publications.js";
+import type * as seed from "../seed.js";
 import type * as users from "../users.js";
 
 import type {
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   chats: typeof chats;
   http: typeof http;
   publications: typeof publications;
+  seed: typeof seed;
   users: typeof users;
 }>;
 
