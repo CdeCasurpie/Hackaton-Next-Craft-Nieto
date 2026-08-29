@@ -75,13 +75,14 @@ export default function Dashboard({ fullName, role: initialRole, onGoHome }: Das
     switch (activeTab) {
       case "student-dashboard": return <StudentDudas />;
       case "student-ofertas": return <StudentOfertas />;
-      case "student-mentores": return <StudentMentores onSelectMentor={() => {}} />;
+      case "student-mentores": return <StudentMentores onNavigateToChats={() => setActiveTab("messages")} />;
       
       case "mentor-muro": return <MentorMuro />;
       case "mentor-postulaciones": return <MentorPostulaciones onGoToChat={goToChat} />;
       case "mentor-anuncios": return <MentorAnuncios />;
       case "mentor-perfil": return <MentorReputacion />;
       
+      case "messages": return <ChatView role={currentRole} />;
       case "chat": return <ChatView role={currentRole} />;
       default: return null;
     }

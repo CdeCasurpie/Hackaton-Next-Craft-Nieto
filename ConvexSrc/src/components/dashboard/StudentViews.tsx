@@ -164,9 +164,10 @@ export function StudentOfertas() {
   );
 }
 
-export function StudentMentores({ onSelectMentor }: { onSelectMentor: (mentorId: string) => void }) {
+export function StudentMentores({ onNavigateToChats }: { onNavigateToChats: () => void }) {
   const [searchTerm, setSearchTerm] = useState("");
   const anuncios = useQuery(api.publications.getAnunciosMentores, {});
+  const contactarMentor = useMutation(api.chats.contactarMentor);
 
   const filtered = anuncios?.filter(a => {
     const term = searchTerm.toLowerCase();
@@ -177,6 +178,16 @@ export function StudentMentores({ onSelectMentor }: { onSelectMentor: (mentorId:
       a.titulo.toLowerCase().includes(term)
     );
   });
+
+  const handleContactar = async (mentorId: any, origenId: any) => {
+    try {
+      await contactarMentor({ mentorId, origenId });
+      toast.success("¡Chat creado! Coordinen por mensajes.");
+      onNavigateToChats();
+    } catch (error) {
+      toast.error("Error al contactar al mentor");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -206,8 +217,7 @@ export function StudentMentores({ onSelectMentor }: { onSelectMentor: (mentorId:
             return (
               <div 
                 key={anuncio._id} 
-                onClick={() => onSelectMentor(anuncio.mentorId)}
-                className="bg-ink-soft border border-white/10 hover:border-brand/50 rounded-2xl p-5 cursor-pointer transition-all hover:shadow-[0_0_20px_rgba(109,94,252,0.1)] group"
+                className="bg-ink-soft border border-white/10 hover:border-brand/50 rounded-2xl p-5 flex flex-col transition-all hover:shadow-[0_0_20px_rgba(109,94,252,0.1)] group"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
@@ -232,7 +242,12 @@ export function StudentMentores({ onSelectMentor }: { onSelectMentor: (mentorId:
                 
                 <div className="pt-4 border-t border-white/10 flex justify-between items-center mt-auto">
                   <span className="text-brand-2 font-bold">${anuncio.precioPorHoraSugerido}/hr</span>
-                  <span className="text-xs text-brand font-medium group-hover:underline">Ver perfil &rarr;</span>
+                  <button 
+                    onClick={() => handleContactar(anuncio.mentorId, anuncio._id)}
+                    className="px-4 py-1.5 bg-brand/10 hover:bg-brand/20 text-brand text-sm font-semibold rounded-lg transition-colors border border-brand/20"
+                  >
+                    Reservar
+                  </button>
                 </div>
               </div>
             );

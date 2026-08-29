@@ -21,6 +21,46 @@ export const crearChat = internalMutation({
   }
 });
 
+export const contactarMentor = mutation({
+  args: {
+    mentorId: v.id("mentors"),
+    origenId: v.union(v.id("pubSolicitudMentoria"), v.id("pubAnuncioMentor"), v.id("pubPuntual")),
+  },
+  handler: async (ctx, args) => {
+    const studentId = await auth.getUserId(ctx);
+    if (!studentId) throw new Error("No autenticado");
+
+    // Verificar si ya existe un chat para este anuncio
+    const chatsExistentes = await ctx.db
+      .query("chats")
+      .withIndex("by_student", q => q.eq("studentId", studentId))
+      .collect();
+      
+    const chatPrevio = chatsExistentes.find(c => c.mentorId === args.mentorId && c.origenId === args.origenId);
+    if (chatPrevio) {
+      return chatPrevio._id;
+    }
+
+    // Crear el nuevo chat
+    const chatId = await ctx.db.insert("chats", {
+      studentId: studentId,
+      mentorId: args.mentorId,
+      origenId: args.origenId,
+      tipo: "contacto_reserva",
+      estado: "abierto"
+    });
+
+    // Insertar un mensaje inicial automático
+    await ctx.db.insert("mensajes", {
+      chatId: chatId,
+      remitenteId: studentId,
+      contenido: "¡Hola! Me interesan tus clases particulares. Este chat es para pasar nuestros contactos y coordinar internamente."
+    });
+
+    return chatId;
+  }
+});
+
 // 2. Obtener chats de un Alumno
 export const getMisChatsAlumno = query({
   args: {},
