@@ -10,9 +10,10 @@ type AuthModalProps = {
   initialMode: Mode;
   initialRole?: Role;
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
-export default function AuthModal({ initialMode, initialRole, onClose }: AuthModalProps) {
+export default function AuthModal({ initialMode, initialRole, onClose, onSuccess }: AuthModalProps) {
   const { signIn } = useAuthActions();
 
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -38,13 +39,16 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
       }
       await signIn("password", { email, password, flow: mode });
       onClose();
-    } catch (err) {
+      if (onSuccess) onSuccess();
+    } catch (err: any) {
       console.error(err);
-      setError(
-        mode === "signUp"
-          ? "No se pudo crear la cuenta. Revisa que la contraseña tenga al menos 8 caracteres y que el correo no esté registrado."
-          : "No pudimos iniciar sesión. Verifica tu correo y contraseña. Si es tu primera vez, usa \"Regístrate\" para crear tu cuenta.",
-      );
+      let msg = err.message || "Ocurrió un error inesperado al procesar tu solicitud.";
+      // Simplificar mensajes técnicos de Convex Auth si es necesario
+      if (msg.includes("already exists")) msg = "Este correo electrónico ya está registrado.";
+      if (msg.includes("Invalid email")) msg = "El correo electrónico no es válido.";
+      if (msg.includes("password")) msg = "Revisa que la contraseña sea correcta y tenga al menos 8 caracteres.";
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -60,7 +64,7 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
-        className="glow-border w-full max-w-md rounded-2xl border border-white/10 bg-ink-soft p-8"
+        className="w-full max-w-md rounded-2xl border border-white/10 bg-ink/70 backdrop-blur-xl shadow-2xl p-8"
       >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold">
@@ -71,7 +75,7 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
             className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
             aria-label="Cerrar"
           >
-            ✕
+            X
           </button>
         </div>
 
@@ -84,24 +88,24 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
                   <button
                     type="button"
                     onClick={() => setRole("student")}
-                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                    className={`flex-1 rounded-lg border py-3 text-sm font-semibold transition ${
                       role === "student"
-                        ? "border-brand bg-brand/20 text-white"
-                        : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        ? "border-brand/50 bg-brand/20 text-brand"
+                        : "border-white/10 text-slate-400 hover:bg-white/5"
                     }`}
                   >
-                    🎓 Estudiante
+                    Estudiante
                   </button>
                   <button
                     type="button"
                     onClick={() => setRole("mentor")}
-                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                    className={`flex-1 rounded-lg border py-3 text-sm font-semibold transition ${
                       role === "mentor"
-                        ? "border-brand bg-brand/20 text-white"
-                        : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        ? "border-brand-2/50 bg-brand-2/20 text-brand-2"
+                        : "border-white/10 text-slate-400 hover:bg-white/5"
                     }`}
                   >
-                    👨‍🏫 Mentor
+                    Mentor
                   </button>
                 </div>
               </div>
@@ -114,7 +118,7 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Tu nombre"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-brand"
+                  className="w-full rounded-xl border border-white/10 bg-ink/50 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-brand"
                 />
               </div>
             </>
@@ -128,7 +132,7 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tucorreo@ejemplo.com"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-brand"
+              className="w-full rounded-xl border border-white/10 bg-ink/50 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-brand"
             />
           </div>
 
@@ -140,17 +144,8 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mínimo 8 caracteres"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-brand"
+              className="w-full rounded-xl border border-white/10 bg-ink/50 px-4 py-3 text-white placeholder-slate-500 outline-none transition focus:border-brand"
             />
-          </div>
-
-          {/* Simulacro de Captcha */}
-          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
-            <input type="checkbox" required id="captcha" className="h-5 w-5 rounded border-white/20 text-brand focus:ring-brand focus:ring-offset-ink-soft bg-white/5" />
-            <label htmlFor="captcha" className="text-sm text-slate-300">No soy un robot</label>
-            <div className="ml-auto flex items-center justify-center opacity-50">
-              <span className="text-[10px] uppercase tracking-widest text-slate-400">Security Check</span>
-            </div>
           </div>
 
           {error && (

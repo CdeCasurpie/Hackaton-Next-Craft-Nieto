@@ -41,16 +41,9 @@ export const completeProfile = mutation({
       rol: args.role
     });
 
-    if (args.role === "mentor") {
-      await ctx.db.insert("mentors", {
-        userId,
-        dni: "Pendiente", // En la hackathon podríamos pedir esto en otra pantalla o aquí
-        celular: "Pendiente",
-        correoPersonal: "Pendiente",
-        calificacionPromedio: 0,
-        numeroDeResenas: 0
-      });
-    }
+    // NOTE: If role is mentor, we do NOT auto-create the mentors record here.
+    // The Dashboard will detect mentorProfile === null and show the upgrade form
+    // requiring real DNI and Celular data before granting mentor access.
   }
 });
 // --- Registro y Roles (Legacy/Testing) ---
@@ -141,5 +134,14 @@ export const getResenasDeMentor = query({
     const resenas = await ctx.db.query("resenas").withIndex("by_mentor", q => q.eq("mentorId", args.mentorId)).collect();
     // Ordenamos por votos útiles, las más útiles primero
     return resenas.sort((a, b) => b.votosUtiles - a.votosUtiles);
+  }
+});
+
+export const getMentorProfile = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await auth.getUserId(ctx);
+    if (!userId) return null;
+    return await ctx.db.query("mentors").withIndex("by_userId", q => q.eq("userId", userId)).first();
   }
 });

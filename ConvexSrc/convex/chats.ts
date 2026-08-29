@@ -1,5 +1,6 @@
 import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { auth } from "./auth";
 
 // 1. Crear Chat Interno (Llamado automáticamente desde publications.ts)
 export const crearChat = internalMutation({
@@ -22,9 +23,20 @@ export const crearChat = internalMutation({
 
 // 2. Obtener chats de un Alumno
 export const getMisChatsAlumno = query({
-  args: { studentId: v.id("users") },
-  handler: async (ctx, args) => {
-    return await ctx.db.query("chats").withIndex("by_student", q => q.eq("studentId", args.studentId)).collect();
+  args: {},
+  handler: async (ctx) => {
+    const studentId = await auth.getUserId(ctx);
+    if (!studentId) return [];
+    const chats = await ctx.db.query("chats").withIndex("by_student", q => q.eq("studentId", studentId)).collect();
+    
+    // Retornar información rica (del mentor)
+    const result = [];
+    for (const chat of chats) {
+      const mentor = await ctx.db.get(chat.mentorId);
+      const mentorUser = mentor ? await ctx.db.get(mentor.userId) : null;
+      result.push({ ...chat, mentor, mentorUser });
+    }
+    return result;
   }
 });
 
@@ -32,18 +44,25 @@ export const getMisChatsAlumno = query({
 export const getMisChatsMentor = query({
   args: { mentorId: v.id("mentors") },
   handler: async (ctx, args) => {
-    return await ctx.db.query("chats").withIndex("by_mentor", q => q.eq("mentorId", args.mentorId)).collect();
+    const chats = await ctx.db.query("chats").withIndex("by_mentor", q => q.eq("mentorId", args.mentorId)).collect();
+    const result = [];
+    for (const chat of chats) {
+      const student = await ctx.db.get(chat.studentId);
+      result.push({ ...chat, student });
+    }
+    return result;
   }
 });
 
 // 4. Enviar un mensaje
 export const enviarMensaje = mutation({
-  args: { chatId: v.id("chats"), remitenteId: v.id("users"), contenido: v.string() },
+  args: { chatId: v.id("chats"), contenido: v.string() },
   handler: async (ctx, args) => {
-    // Aquí se podría validar que el remitente sea parte del chat
+    const remitenteId = await auth.getUserId(ctx);
+    if (!remitenteId) throw new Error("No autenticado");
     await ctx.db.insert("mensajes", {
       chatId: args.chatId,
-      remitenteId: args.remitenteId,
+      remitenteId: remitenteId,
       contenido: args.contenido
     });
   }

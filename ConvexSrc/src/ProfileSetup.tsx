@@ -30,36 +30,36 @@ export default function ProfileSetup() {
         animate={{ opacity: 1, y: 0 }}
         className="glow-border w-full max-w-md rounded-2xl border border-white/10 bg-ink-soft p-8"
       >
-        <h1 className="text-2xl font-bold">¡Casi listo! 🎉</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Cuéntanos quién eres para personalizar tu experiencia.
+        <h1 className="text-2xl font-bold">¡Casi listo!</h1>
+        <p className="mt-2 text-slate-400">
+          Completa tu perfil para empezar a usar Atenea.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="mb-2 block text-sm text-slate-300">Soy</label>
-            <div className="grid grid-cols-2 gap-3">
+            <label className="mb-2 block text-sm font-medium text-slate-300">¿Qué buscas en Atenea?</label>
+            <div className="flex gap-4">
               <button
                 type="button"
                 onClick={() => setRole("student")}
-                className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                className={`flex-1 rounded-lg border py-3 text-sm font-semibold transition ${
                   role === "student"
                     ? "border-brand bg-brand/20 text-white"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "border-white/10 text-slate-400 hover:bg-white/5"
                 }`}
               >
-                🎓 Estudiante
+                Estudiante
               </button>
               <button
                 type="button"
                 onClick={() => setRole("mentor")}
-                className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                className={`flex-1 rounded-lg border py-3 text-sm font-semibold transition ${
                   role === "mentor"
                     ? "border-brand bg-brand/20 text-white"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "border-white/10 text-slate-400 hover:bg-white/5"
                 }`}
               >
-                👨‍🏫 Mentor
+                Mentor
               </button>
             </div>
           </div>

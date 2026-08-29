@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView, animate, type Variants } from "framer-motion";
-import { AnimatedBackground } from "./Background";
+import { motion, useInView, animate, type Variants, useScroll, useTransform } from "framer-motion";
+import { Search, MapPin, Zap, MessageCircle, ShieldCheck, Target } from "lucide-react";
 
 type Role = "student" | "mentor";
 
 type LandingProps = {
   onGetStarted: (role?: Role) => void;
   onSignIn: () => void;
+  userProfile?: { fullName: string };
+  onGoToDashboard?: () => void;
 };
 
 const fadeUp: Variants = {
@@ -21,154 +23,160 @@ const fadeUp: Variants = {
 function Mascot() {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.5, y: 50 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.5 }}
-      className="pointer-events-none select-none drop-shadow-2xl"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, delay: 0.6 }}
+      className="pointer-events-none select-none"
       aria-hidden="true"
     >
       <motion.svg
-        width="90"
-        height="100"
-        viewBox="0 0 100 110"
-        animate={{ y: [0, -10, 0], rotate: [-1, 2, -1] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        width="150"
+        height="170"
+        viewBox="0 0 150 170"
+        animate={{ y: [0, -12, 0], rotate: [-2, 2, -2] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        style={{ filter: "drop-shadow(0 18px 30px rgba(109,94,252,0.45))" }}
       >
         <defs>
-          <linearGradient id="roboGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="var(--color-brand)" />
-            <stop offset="100%" stopColor="var(--color-brand-2)" />
+          <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#5e4ddf" />
+            <stop offset="100%" stopColor="#f47286" />
           </linearGradient>
         </defs>
 
-        {/* Antena */}
-        <line x1="50" y1="25" x2="50" y2="10" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" />
+        <line x1="75" y1="34" x2="75" y2="16" stroke="#c7cbe6" strokeWidth="3" strokeLinecap="round" />
         <motion.circle
-          cx="50" cy="8" r="4" fill="var(--color-accent)"
-          animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.2, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          cx="75" cy="13" r="5" fill="#f47286"
+          animate={{ scale: [1, 1.35, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Cabeza */}
-        <rect x="15" y="25" width="70" height="60" rx="20" fill="url(#roboGrad)" />
-        
-        {/* Pantalla */}
-        <rect x="25" y="35" width="50" height="35" rx="10" fill="var(--color-ink-soft)" />
+        <rect x="35" y="34" width="80" height="66" rx="20" fill="url(#bodyGrad)" />
 
-        {/* Ojos */}
+        <polygon points="75,20 118,36 75,52 32,36" fill="#1b2136" />
+        <rect x="70" y="44" width="10" height="10" fill="#1b2136" />
+        <line x1="118" y1="36" x2="118" y2="58" stroke="#f47286" strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx="118" cy="60" r="3.5" fill="#f47286" />
+
         <motion.g
           style={{ transformBox: "fill-box", transformOrigin: "center" }}
           animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-          transition={{ duration: 4, repeat: Infinity, times: [0, 0.9, 0.93, 0.96, 1], ease: "easeInOut" }}
+          transition={{ duration: 4, repeat: Infinity, times: [0, 0.9, 0.94, 0.98, 1], ease: "easeInOut" }}
         >
-          <circle cx="38" cy="48" r="4" fill="white" />
-          <circle cx="62" cy="48" r="4" fill="white" />
+          <circle cx="58" cy="62" r="9" fill="#ffffff" />
+          <circle cx="92" cy="62" r="9" fill="#ffffff" />
+          <circle cx="60" cy="63" r="4" fill="#1b2136" />
+          <circle cx="94" cy="63" r="4" fill="#1b2136" />
         </motion.g>
 
-        {/* Mejillas */}
-        <circle cx="30" cy="55" r="3" fill="var(--color-accent)" opacity="0.6" />
-        <circle cx="70" cy="55" r="3" fill="var(--color-accent)" opacity="0.6" />
+        <circle cx="48" cy="80" r="5" fill="#f47286" opacity="0.6" />
+        <circle cx="102" cy="80" r="5" fill="#f47286" opacity="0.6" />
 
-        {/* Boca */}
-        <path d="M45 56 Q50 60 55 56" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path d="M63 82 Q75 92 87 82" stroke="#1b2136" strokeWidth="3" fill="none" strokeLinecap="round" />
+
+        <rect x="52" y="104" width="46" height="40" rx="14" fill="url(#bodyGrad)" opacity="0.92" />
+        <rect x="64" y="114" width="22" height="16" rx="5" fill="#0a0a0f" opacity="0.7" />
+
+        <motion.g
+          style={{ transformBox: "fill-box", transformOrigin: "0% 100%" }}
+          animate={{ rotate: [0, -22, 6, -22, 0] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", repeatDelay: 1.2 }}
+        >
+          <line x1="100" y1="112" x2="120" y2="98" stroke="#5e4ddf" strokeWidth="7" strokeLinecap="round" />
+          <circle cx="122" cy="96" r="6" fill="#f47286" />
+        </motion.g>
+        <line x1="52" y1="112" x2="36" y2="126" stroke="#5e4ddf" strokeWidth="7" strokeLinecap="round" />
+        <circle cx="34" cy="128" r="6" fill="#f47286" />
       </motion.svg>
     </motion.div>
   );
 }
 
-function Navbar({ onGetStarted, onSignIn }: LandingProps) {
+export function Navbar({ onGetStarted, onSignIn, userProfile, onGoToDashboard, onGoHome }: LandingProps & { onGoHome?: () => void }) {
   return (
     <motion.header
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.7, ease: "easeOut" }}
-      className="fixed top-0 z-50 w-full bg-ink/80 backdrop-blur-md border-b border-white/5"
+      className="fixed top-0 z-50 w-full bg-ink/90 backdrop-blur-md border-b border-white/10"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-brand font-bold text-white shadow-lg">
-            M
-          </div>
-          <span className="text-xl font-bold tracking-tight">
-            Mentor<span className="text-highlight">Match</span>
-          </span>
+          <button onClick={onGoHome} className="text-3xl tracking-tight text-white hover:opacity-80 transition text-left font-logo flex items-center gap-3">
+            <img src="/logo.png" alt="Atenea" className="w-8 h-8 rounded-full" />
+            Atenea
+          </button>
         </div>
-        <nav className="hidden items-center gap-8 text-sm font-medium text-slate-300 md:flex">
+        <nav className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
           <a href="#como-funciona" className="transition hover:text-white">Cómo funciona</a>
           <a href="#beneficios" className="transition hover:text-white">Beneficios</a>
+          <a href="#cta" className="transition hover:text-white">Empezar</a>
         </nav>
         <div className="flex items-center gap-3">
-          <button
-            onClick={onSignIn}
-            className="hidden px-4 py-2 text-sm font-medium text-slate-300 transition hover:text-white sm:block"
-          >
-            Iniciar sesión
-          </button>
-          <button
-            onClick={() => onGetStarted()}
-            className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-ink transition hover:bg-slate-200"
-          >
-            Registrarse
-          </button>
+          {userProfile ? (
+            <div className="flex items-center gap-4">
+              <span className="hidden text-sm text-slate-300 md:block">
+                Hola, <span className="font-semibold text-white">{userProfile.fullName}</span>
+              </span>
+              <button
+                onClick={onGoToDashboard}
+                className="rounded-lg bg-gradient-to-r from-brand to-brand-2 px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 shadow-lg"
+              >
+                Ir al Dashboard →
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={onSignIn}
+                className="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-200 transition hover:text-white sm:block"
+              >
+                Iniciar sesión
+              </button>
+              <button
+                onClick={() => onGetStarted()}
+                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-slate-200"
+              >
+                Registrarse
+              </button>
+            </>
+          )}
         </div>
       </div>
     </motion.header>
   );
 }
 
-function FloatingCard() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-      animate={{ opacity: 1, scale: 1, rotate: 0 }}
-      transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-      className="relative w-full max-w-sm"
-    >
-      <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="student-card p-5"
-      >
-        <div className="mb-3 flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-brand/20 text-brand text-sm font-bold">
-            MG
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white">María G.</p>
-            <p className="text-xs text-slate-400">Estudiante · Cálculo</p>
-          </div>
-          <span className="ml-auto rounded bg-brand-2/20 px-2 py-1 text-[10px] font-bold text-brand-2 uppercase tracking-wide">
-            Urgente
-          </span>
-        </div>
-        <p className="text-sm text-slate-300 font-medium">
-          "Necesito ayuda con integrales para mi examen del viernes. Nivel
-          universitario, modalidad online."
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-bold">
-          <span className="rounded bg-white/10 px-2.5 py-1 text-slate-300">Cálculo</span>
-          <span className="rounded bg-white/10 px-2.5 py-1 text-slate-300">Online</span>
-          <span className="rounded bg-accent/20 text-accent px-2.5 py-1">$15 Ofrecido</span>
-        </div>
-        <button className="mt-5 w-full rounded-lg bg-brand py-2 text-sm font-bold text-white transition hover:bg-brand-2">
-          Enviar Oferta
-        </button>
-      </motion.div>
-    </motion.div>
-  );
-}
+function Hero() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [location, setLocation] = useState("");
+  
+  // Efecto Parallax en scroll
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 1000], [0, -150]);
+  const y2 = useTransform(scrollY, [0, 1000], [0, 150]);
 
-function Hero({ onGetStarted }: LandingProps) {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    window.dispatchEvent(
+      new CustomEvent("navigate", {
+        detail: { view: "directorio", searchParams: { query: searchQuery, location } },
+      })
+    );
+  };
+
   return (
-    <section className="relative mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center gap-12 px-6 pt-28 md:flex-row md:pt-0">
-      <div className="flex-1">
+    <section className="relative mx-auto flex min-h-screen max-w-7xl flex-col lg:flex-row items-center justify-between gap-12 px-6 pt-32 lg:pt-16 pb-20 overflow-hidden">
+      
+      {/* Columna Izquierda: Texto y Búsqueda */}
+      <motion.div style={{ y: y1 }} className="w-full lg:w-1/2 flex flex-col text-left z-10">
         <motion.span
           variants={fadeUp}
           initial="hidden"
           animate="show"
-          className="inline-block rounded-full border border-brand/30 bg-brand/10 px-4 py-1.5 text-xs font-bold text-brand-2 tracking-wide uppercase"
+          className="inline-block self-start rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-300 mb-6"
         >
-          El marketplace del aprendizaje
+          El primer marketplace educativo para universitarios
         </motion.span>
 
         <motion.h1
@@ -176,49 +184,99 @@ function Hero({ onGetStarted }: LandingProps) {
           initial="hidden"
           animate="show"
           custom={1}
-          className="mt-6 text-5xl font-bold leading-[1.1] tracking-tight md:text-6xl text-white"
+          className="text-7xl md:text-8xl font-logo mb-2 text-white drop-shadow-xl tracking-wider"
         >
-          Publica tu problema.
-          <br />
-          <span className="text-highlight">Deja que el experto llegue.</span>
+          Atenea
         </motion.h1>
 
-        <motion.p
+        <motion.h2
+          variants={fadeUp}
+          initial="hidden"
+          animate="show"
+          custom={1.5}
+          className="text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl mb-8 text-slate-200"
+        >
+          ¿Qué quieres resolver <span className="text-gradient">hoy?</span>
+        </motion.h2>
+
+        {/* Barra de Búsqueda Dual */}
+        <motion.form 
+          onSubmit={handleSearch}
           variants={fadeUp}
           initial="hidden"
           animate="show"
           custom={2}
-          className="mt-6 max-w-md text-lg text-slate-400 font-medium"
+          className="flex flex-col md:flex-row bg-ink-soft/80 border border-white/20 backdrop-blur-xl p-2 rounded-2xl md:rounded-full shadow-2xl shadow-brand/10 w-full"
         >
-          Los estudiantes cuentan qué necesitan aprender. Los profesores y
-          mentores los contactan directamente. Sin buscar, sin esperar.
-        </motion.p>
+          <div className="flex-1 flex items-center px-4 py-2 border-b md:border-b-0 md:border-r border-white/10">
+            <Search className="w-5 h-5 mr-3 text-slate-400" />
+            <input 
+              required
+              type="text" 
+              placeholder="Materia, habilidad o tema..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full bg-transparent text-white placeholder-slate-400 focus:outline-none text-base"
+            />
+          </div>
+          <div className="flex-1 flex items-center px-4 py-2 mt-2 md:mt-0">
+            <MapPin className="w-5 h-5 mr-3 text-slate-400" />
+            <select 
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              className="w-full bg-transparent text-slate-300 focus:outline-none text-base appearance-none cursor-pointer"
+            >
+              <option value="" className="bg-ink text-slate-300">Cualquier modalidad</option>
+              <option value="online" className="bg-ink text-slate-300">En línea (Webcam)</option>
+              <option value="presencial" className="bg-ink text-slate-300">Presencial (Campus)</option>
+            </select>
+          </div>
+          <button type="submit" className="mt-4 md:mt-0 md:ml-2 bg-gradient-to-r from-brand to-brand-2 hover:opacity-90 text-white font-bold text-base px-6 py-3 rounded-xl md:rounded-full transition">
+            BUSCAR
+          </button>
+        </motion.form>
 
         <motion.div
           variants={fadeUp}
           initial="hidden"
           animate="show"
           custom={3}
-          className="mt-8 flex flex-wrap gap-4"
+          className="mt-6 flex flex-wrap justify-start gap-3 text-sm"
         >
-          <button
-            onClick={() => onGetStarted("student")}
-            className="rounded-lg bg-brand px-6 py-3 font-bold text-white shadow-lg transition hover:bg-brand-2 hover:-translate-y-1"
-          >
-            Soy estudiante
-          </button>
-          <button
-            onClick={() => onGetStarted("mentor")}
-            className="rounded-lg border-2 border-white/20 bg-transparent px-6 py-3 font-bold text-white transition hover:bg-white/10 hover:-translate-y-1"
-          >
-            Soy mentor
-          </button>
+          <span className="text-slate-400 mr-2 py-1">Populares:</span>
+          {["Programación Web", "Matemáticas", "Física", "Diseño UX"].map(tag => (
+            <button 
+              key={tag}
+              type="button"
+              onClick={() => {
+                setSearchQuery(tag);
+                handleSearch(new Event('submit') as any);
+              }}
+              className="px-3 py-1 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 transition"
+            >
+              {tag}
+            </button>
+          ))}
         </motion.div>
-      </div>
+      </motion.div>
 
-      <div className="flex flex-1 justify-center">
-        <FloatingCard />
-      </div>
+      {/* Columna Derecha: Logo Gigante */}
+      <motion.div 
+        style={{ y: y2 }}
+        className="w-full lg:w-1/2 flex justify-center lg:justify-end z-10"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+      >
+        <motion.img 
+          src="/logo.png" 
+          alt="Atenea Logo" 
+          className="w-full max-w-md lg:max-w-lg object-contain"
+          style={{ filter: "drop-shadow(0 0 40px rgba(244,114,134,0.3))" }}
+          animate={{ y: [0, -20, 0], rotate: [0, 2, -2, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </motion.div>
     </section>
   );
 }
@@ -255,7 +313,7 @@ function Stats() {
   ];
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
-      <div className="grid grid-cols-2 gap-6 rounded-xl border border-white/10 bg-ink-soft p-8 md:grid-cols-4 shadow-xl">
+      <div className="grid grid-cols-2 gap-6 rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-md md:grid-cols-4">
         {stats.map((s, i) => (
           <motion.div
             key={s.label}
@@ -266,10 +324,10 @@ function Stats() {
             custom={i}
             className="text-center"
           >
-            <p className="text-4xl font-bold text-brand-2">
+            <p className="text-4xl font-bold text-gradient">
               <Counter to={s.to} suffix={s.suffix} />
             </p>
-            <p className="mt-2 text-sm font-medium text-slate-400">{s.label}</p>
+            <p className="mt-2 text-sm text-slate-400">{s.label}</p>
           </motion.div>
         ))}
       </div>
@@ -291,8 +349,8 @@ function HowItWorks() {
     },
     {
       n: "03",
-      title: "Aprende de inmediato",
-      text: "Conversan por el chat interno, acuerdan horario y precio, y empiezan la clase.",
+      title: "Chatean y se ponen de acuerdo",
+      text: "Conversan por el chat interno, acuerdan horario y precio, y empiezan a aprender.",
     },
   ];
   return (
@@ -302,7 +360,7 @@ function HowItWorks() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="text-center text-4xl font-bold tracking-tight text-white"
+        className="text-center text-4xl font-bold tracking-tight"
       >
         Cómo funciona
       </motion.h2>
@@ -312,7 +370,7 @@ function HowItWorks() {
         whileInView="show"
         viewport={{ once: true }}
         custom={1}
-        className="mx-auto mt-4 max-w-lg text-center text-slate-400 font-medium"
+        className="mx-auto mt-4 max-w-lg text-center text-slate-400"
       >
         Un flujo simple pensado para que dejes de buscar y empieces a aprender.
       </motion.p>
@@ -326,12 +384,12 @@ function HowItWorks() {
             whileInView="show"
             viewport={{ once: true }}
             custom={i}
-            whileHover={{ y: -4 }}
-            className="rounded-xl border border-white/10 bg-ink-soft p-8 shadow-lg"
+            whileHover={{ y: -8 }}
+            className="glow-border rounded-2xl border border-white/10 bg-ink-soft/60 p-8 backdrop-blur-md"
           >
-            <span className="text-5xl font-bold text-white/5">{s.n}</span>
-            <h3 className="mt-4 text-xl font-bold text-white">{s.title}</h3>
-            <p className="mt-3 text-sm text-slate-400 leading-relaxed">{s.text}</p>
+            <span className="text-5xl font-bold text-white/10">{s.n}</span>
+            <h3 className="mt-4 text-xl font-semibold">{s.title}</h3>
+            <p className="mt-3 text-sm text-slate-400">{s.text}</p>
           </motion.div>
         ))}
       </div>
@@ -341,10 +399,10 @@ function HowItWorks() {
 
 function Benefits() {
   const items = [
-    { title: "Sin buscar por horas", text: "Publicas una vez y los mentores llegan a ti." },
-    { title: "Chat en tiempo real", text: "Conversaciones instantáneas dentro de la plataforma." },
-    { title: "Mentores verificados", text: "Perfiles con experiencia y valoraciones reales." },
-    { title: "A tu medida", text: "Filtra por materia, nivel, precio y modalidad." },
+    { icon: <Zap className="w-8 h-8 text-brand-2" />, title: "Sin buscar durante horas", text: "Publicas una vez y los mentores llegan a ti." },
+    { icon: <MessageCircle className="w-8 h-8 text-brand-2" />, title: "Chat en tiempo real", text: "Conversaciones instantáneas dentro de la plataforma." },
+    { icon: <ShieldCheck className="w-8 h-8 text-brand-2" />, title: "Mentores verificados", text: "Perfiles con experiencia y valoraciones reales." },
+    { icon: <Target className="w-8 h-8 text-brand-2" />, title: "A tu medida", text: "Filtra por materia, nivel, precio y modalidad." },
   ];
   return (
     <section id="beneficios" className="mx-auto max-w-6xl px-6 py-24">
@@ -357,9 +415,11 @@ function Benefits() {
             whileInView="show"
             viewport={{ once: true }}
             custom={i}
-            className="rounded-xl border-l-4 border-brand-2 bg-ink-soft p-6 shadow-md"
+            whileHover={{ scale: 1.04 }}
+            className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
           >
-            <h3 className="font-bold text-white">{it.title}</h3>
+            <div className="mb-4">{it.icon}</div>
+            <h3 className="font-semibold">{it.title}</h3>
             <p className="mt-2 text-sm text-slate-400">{it.text}</p>
           </motion.div>
         ))}
@@ -376,17 +436,17 @@ function CTA({ onGetStarted }: LandingProps) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="relative overflow-hidden rounded-2xl bg-brand p-12 text-center shadow-2xl"
+        className="glow-border relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-brand/20 to-brand-2/10 p-12 text-center backdrop-blur-xl"
       >
-        <h2 className="text-4xl font-bold tracking-tight text-white">
-          ¿Listo para aprender <span className="text-brand-2">mejor</span>?
+        <h2 className="text-4xl font-bold tracking-tight">
+          ¿Listo para aprender <span className="text-gradient">mejor</span>?
         </h2>
-        <p className="mx-auto mt-4 max-w-md text-blue-100 font-medium">
+        <p className="mx-auto mt-4 max-w-md text-slate-300">
           Crea tu cuenta gratis y publica tu primer problema hoy mismo.
         </p>
         <button
           onClick={() => onGetStarted()}
-          className="mt-8 rounded-lg bg-white px-8 py-3 font-bold text-brand shadow-lg transition hover:-translate-y-1 hover:shadow-xl"
+          className="mt-8 rounded-xl bg-white px-8 py-3 font-semibold text-ink transition hover:scale-[1.03]"
         >
           Empezar gratis
         </button>
@@ -397,8 +457,8 @@ function CTA({ onGetStarted }: LandingProps) {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/5 py-10 text-center text-sm font-medium text-slate-600">
-      <p>© {new Date().getFullYear()} MentorMatch. Construido con Convex.</p>
+    <footer className="border-t border-white/10 py-10 text-center text-sm text-slate-500">
+      <p>© {new Date().getFullYear()} Atenea. Hecho con dedicación.</p>
     </footer>
   );
 }
@@ -406,10 +466,9 @@ function Footer() {
 export default function Landing(props: LandingProps) {
   return (
     <div className="relative min-h-screen">
-      <AnimatedBackground />
       <Navbar {...props} />
       <main>
-        <Hero {...props} />
+        <Hero />
         <Stats />
         <HowItWorks />
         <Benefits />
@@ -417,7 +476,7 @@ export default function Landing(props: LandingProps) {
       </main>
       <Footer />
 
-      {/* Mascota */}
+      {/* Mascota fija en la esquina inferior derecha */}
       <div className="fixed bottom-4 right-4 z-40 hidden sm:block">
         <Mascot />
       </div>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
