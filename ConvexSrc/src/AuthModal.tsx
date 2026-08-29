@@ -144,6 +144,15 @@ export default function AuthModal({ initialMode, initialRole, onClose }: AuthMod
             />
           </div>
 
+          {/* Simulacro de Captcha */}
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
+            <input type="checkbox" required id="captcha" className="h-5 w-5 rounded border-white/20 text-brand focus:ring-brand focus:ring-offset-ink-soft bg-white/5" />
+            <label htmlFor="captcha" className="text-sm text-slate-300">No soy un robot</label>
+            <div className="ml-auto flex items-center justify-center opacity-50">
+              <span className="text-[10px] uppercase tracking-widest text-slate-400">Security Check</span>
+            </div>
+          </div>
+
           {error && (
             <p className="rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
           )}

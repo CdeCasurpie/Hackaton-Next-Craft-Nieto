@@ -49,13 +49,13 @@ function Mascot() {
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Cabeza (Cuadrada pero muy redondeada) */}
+        {/* Cabeza */}
         <rect x="15" y="25" width="70" height="60" rx="20" fill="url(#roboGrad)" />
         
-        {/* Pantalla (Rostro) */}
+        {/* Pantalla */}
         <rect x="25" y="35" width="50" height="35" rx="10" fill="var(--color-ink-soft)" />
 
-        {/* Ojos (Parpadeo kawaii) */}
+        {/* Ojos */}
         <motion.g
           style={{ transformBox: "fill-box", transformOrigin: "center" }}
           animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
@@ -65,11 +65,11 @@ function Mascot() {
           <circle cx="62" cy="48" r="4" fill="white" />
         </motion.g>
 
-        {/* Mejillas sonrosadas */}
+        {/* Mejillas */}
         <circle cx="30" cy="55" r="3" fill="var(--color-accent)" opacity="0.6" />
         <circle cx="70" cy="55" r="3" fill="var(--color-accent)" opacity="0.6" />
 
-        {/* Boquita W */}
+        {/* Boca */}
         <path d="M45 56 Q50 60 55 56" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
       </motion.svg>
     </motion.div>
@@ -82,32 +82,31 @@ function Navbar({ onGetStarted, onSignIn }: LandingProps) {
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.7, ease: "easeOut" }}
-      className="fixed top-0 z-50 w-full backdrop-blur-md"
+      className="fixed top-0 z-50 w-full bg-ink/80 backdrop-blur-md border-b border-white/5"
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-2 font-bold text-white shadow-lg">
-            N
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-brand font-bold text-white shadow-lg">
+            M
           </div>
-          <span className="text-lg font-semibold tracking-tight">
-            The Next <span className="text-gradient">Craft</span>
+          <span className="text-xl font-bold tracking-tight">
+            Mentor<span className="text-highlight">Match</span>
           </span>
         </div>
-        <nav className="hidden items-center gap-8 text-sm text-slate-300 md:flex">
+        <nav className="hidden items-center gap-8 text-sm font-medium text-slate-300 md:flex">
           <a href="#como-funciona" className="transition hover:text-white">Cómo funciona</a>
           <a href="#beneficios" className="transition hover:text-white">Beneficios</a>
-          <a href="#cta" className="transition hover:text-white">Empezar</a>
         </nav>
         <div className="flex items-center gap-3">
           <button
             onClick={onSignIn}
-            className="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-200 transition hover:text-white sm:block"
+            className="hidden px-4 py-2 text-sm font-medium text-slate-300 transition hover:text-white sm:block"
           >
             Iniciar sesión
           </button>
           <button
             onClick={() => onGetStarted()}
-            className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-slate-200"
+            className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-ink transition hover:bg-slate-200"
           >
             Registrarse
           </button>
@@ -120,39 +119,39 @@ function Navbar({ onGetStarted, onSignIn }: LandingProps) {
 function FloatingCard() {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9, rotate: -3 }}
+      initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
       animate={{ opacity: 1, scale: 1, rotate: 0 }}
       transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
       className="relative w-full max-w-sm"
     >
       <motion.div
-        animate={{ y: [0, -14, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        className="glow-border rounded-2xl border border-white/10 bg-ink-soft/80 p-5 backdrop-blur-xl"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="student-card p-5"
       >
         <div className="mb-3 flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-accent to-brand text-sm font-bold">
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-brand/20 text-brand text-sm font-bold">
             MG
           </div>
           <div>
-            <p className="text-sm font-semibold">María G.</p>
+            <p className="text-sm font-bold text-white">María G.</p>
             <p className="text-xs text-slate-400">Estudiante · Cálculo</p>
           </div>
-          <span className="ml-auto rounded-full bg-brand/20 px-2 py-1 text-[10px] font-medium text-brand-2">
-            Nueva
+          <span className="ml-auto rounded bg-brand-2/20 px-2 py-1 text-[10px] font-bold text-brand-2 uppercase tracking-wide">
+            Urgente
           </span>
         </div>
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-slate-300 font-medium">
           "Necesito ayuda con integrales para mi examen del viernes. Nivel
           universitario, modalidad online."
         </p>
-        <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-          <span className="rounded-full bg-white/5 px-2.5 py-1 text-slate-300">Cálculo</span>
-          <span className="rounded-full bg-white/5 px-2.5 py-1 text-slate-300">Online</span>
-          <span className="rounded-full bg-white/5 px-2.5 py-1 text-slate-300">$15/h</span>
+        <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-bold">
+          <span className="rounded bg-white/10 px-2.5 py-1 text-slate-300">Cálculo</span>
+          <span className="rounded bg-white/10 px-2.5 py-1 text-slate-300">Online</span>
+          <span className="rounded bg-accent/20 text-accent px-2.5 py-1">$15 Ofrecido</span>
         </div>
-        <button className="mt-4 w-full rounded-lg bg-gradient-to-r from-brand to-brand-2 py-2 text-sm font-semibold text-white transition hover:opacity-90">
-          Contactar estudiante
+        <button className="mt-5 w-full rounded-lg bg-brand py-2 text-sm font-bold text-white transition hover:bg-brand-2">
+          Enviar Oferta
         </button>
       </motion.div>
     </motion.div>
@@ -167,9 +166,9 @@ function Hero({ onGetStarted }: LandingProps) {
           variants={fadeUp}
           initial="hidden"
           animate="show"
-          className="inline-block rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-medium text-slate-300"
+          className="inline-block rounded-full border border-brand/30 bg-brand/10 px-4 py-1.5 text-xs font-bold text-brand-2 tracking-wide uppercase"
         >
-          La plataforma donde el mentor te encuentra a ti
+          El marketplace del aprendizaje
         </motion.span>
 
         <motion.h1
@@ -177,11 +176,11 @@ function Hero({ onGetStarted }: LandingProps) {
           initial="hidden"
           animate="show"
           custom={1}
-          className="mt-6 text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl"
+          className="mt-6 text-5xl font-bold leading-[1.1] tracking-tight md:text-6xl text-white"
         >
           Publica tu problema.
           <br />
-          <span className="text-gradient">Deja que el experto llegue.</span>
+          <span className="text-highlight">Deja que el experto llegue.</span>
         </motion.h1>
 
         <motion.p
@@ -189,7 +188,7 @@ function Hero({ onGetStarted }: LandingProps) {
           initial="hidden"
           animate="show"
           custom={2}
-          className="mt-6 max-w-md text-lg text-slate-300"
+          className="mt-6 max-w-md text-lg text-slate-400 font-medium"
         >
           Los estudiantes cuentan qué necesitan aprender. Los profesores y
           mentores los contactan directamente. Sin buscar, sin esperar.
@@ -204,15 +203,15 @@ function Hero({ onGetStarted }: LandingProps) {
         >
           <button
             onClick={() => onGetStarted("student")}
-            className="rounded-xl bg-gradient-to-r from-brand to-brand-2 px-6 py-3 font-semibold text-white shadow-lg shadow-brand/30 transition hover:scale-[1.03]"
+            className="rounded-lg bg-brand px-6 py-3 font-bold text-white shadow-lg transition hover:bg-brand-2 hover:-translate-y-1"
           >
             Soy estudiante
           </button>
           <button
             onClick={() => onGetStarted("mentor")}
-            className="rounded-xl border border-white/15 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+            className="rounded-lg border-2 border-white/20 bg-transparent px-6 py-3 font-bold text-white transition hover:bg-white/10 hover:-translate-y-1"
           >
-            Soy profesor / mentor
+            Soy mentor
           </button>
         </motion.div>
       </div>
@@ -256,7 +255,7 @@ function Stats() {
   ];
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
-      <div className="grid grid-cols-2 gap-6 rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-md md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-6 rounded-xl border border-white/10 bg-ink-soft p-8 md:grid-cols-4 shadow-xl">
         {stats.map((s, i) => (
           <motion.div
             key={s.label}
@@ -267,10 +266,10 @@ function Stats() {
             custom={i}
             className="text-center"
           >
-            <p className="text-4xl font-bold text-gradient">
+            <p className="text-4xl font-bold text-brand-2">
               <Counter to={s.to} suffix={s.suffix} />
             </p>
-            <p className="mt-2 text-sm text-slate-400">{s.label}</p>
+            <p className="mt-2 text-sm font-medium text-slate-400">{s.label}</p>
           </motion.div>
         ))}
       </div>
@@ -292,8 +291,8 @@ function HowItWorks() {
     },
     {
       n: "03",
-      title: "Chatean y se ponen de acuerdo",
-      text: "Conversan por el chat interno, acuerdan horario y precio, y empiezan a aprender.",
+      title: "Aprende de inmediato",
+      text: "Conversan por el chat interno, acuerdan horario y precio, y empiezan la clase.",
     },
   ];
   return (
@@ -303,7 +302,7 @@ function HowItWorks() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="text-center text-4xl font-bold tracking-tight"
+        className="text-center text-4xl font-bold tracking-tight text-white"
       >
         Cómo funciona
       </motion.h2>
@@ -313,7 +312,7 @@ function HowItWorks() {
         whileInView="show"
         viewport={{ once: true }}
         custom={1}
-        className="mx-auto mt-4 max-w-lg text-center text-slate-400"
+        className="mx-auto mt-4 max-w-lg text-center text-slate-400 font-medium"
       >
         Un flujo simple pensado para que dejes de buscar y empieces a aprender.
       </motion.p>
@@ -327,12 +326,12 @@ function HowItWorks() {
             whileInView="show"
             viewport={{ once: true }}
             custom={i}
-            whileHover={{ y: -8 }}
-            className="glow-border rounded-2xl border border-white/10 bg-ink-soft/60 p-8 backdrop-blur-md"
+            whileHover={{ y: -4 }}
+            className="rounded-xl border border-white/10 bg-ink-soft p-8 shadow-lg"
           >
-            <span className="text-5xl font-bold text-white/10">{s.n}</span>
-            <h3 className="mt-4 text-xl font-semibold">{s.title}</h3>
-            <p className="mt-3 text-sm text-slate-400">{s.text}</p>
+            <span className="text-5xl font-bold text-white/5">{s.n}</span>
+            <h3 className="mt-4 text-xl font-bold text-white">{s.title}</h3>
+            <p className="mt-3 text-sm text-slate-400 leading-relaxed">{s.text}</p>
           </motion.div>
         ))}
       </div>
@@ -342,10 +341,10 @@ function HowItWorks() {
 
 function Benefits() {
   const items = [
-    { icon: "⚡", title: "Sin buscar durante horas", text: "Publicas una vez y los mentores llegan a ti." },
-    { icon: "💬", title: "Chat en tiempo real", text: "Conversaciones instantáneas dentro de la plataforma." },
-    { icon: "🛡️", title: "Mentores verificados", text: "Perfiles con experiencia y valoraciones reales." },
-    { icon: "🎯", title: "A tu medida", text: "Filtra por materia, nivel, precio y modalidad." },
+    { title: "Sin buscar por horas", text: "Publicas una vez y los mentores llegan a ti." },
+    { title: "Chat en tiempo real", text: "Conversaciones instantáneas dentro de la plataforma." },
+    { title: "Mentores verificados", text: "Perfiles con experiencia y valoraciones reales." },
+    { title: "A tu medida", text: "Filtra por materia, nivel, precio y modalidad." },
   ];
   return (
     <section id="beneficios" className="mx-auto max-w-6xl px-6 py-24">
@@ -358,11 +357,9 @@ function Benefits() {
             whileInView="show"
             viewport={{ once: true }}
             custom={i}
-            whileHover={{ scale: 1.04 }}
-            className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+            className="rounded-xl border-l-4 border-brand-2 bg-ink-soft p-6 shadow-md"
           >
-            <div className="text-3xl">{it.icon}</div>
-            <h3 className="mt-4 font-semibold">{it.title}</h3>
+            <h3 className="font-bold text-white">{it.title}</h3>
             <p className="mt-2 text-sm text-slate-400">{it.text}</p>
           </motion.div>
         ))}
@@ -379,17 +376,17 @@ function CTA({ onGetStarted }: LandingProps) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="glow-border relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-brand/20 to-brand-2/10 p-12 text-center backdrop-blur-xl"
+        className="relative overflow-hidden rounded-2xl bg-brand p-12 text-center shadow-2xl"
       >
-        <h2 className="text-4xl font-bold tracking-tight">
-          ¿Listo para aprender <span className="text-gradient">mejor</span>?
+        <h2 className="text-4xl font-bold tracking-tight text-white">
+          ¿Listo para aprender <span className="text-brand-2">mejor</span>?
         </h2>
-        <p className="mx-auto mt-4 max-w-md text-slate-300">
+        <p className="mx-auto mt-4 max-w-md text-blue-100 font-medium">
           Crea tu cuenta gratis y publica tu primer problema hoy mismo.
         </p>
         <button
           onClick={() => onGetStarted()}
-          className="mt-8 rounded-xl bg-white px-8 py-3 font-semibold text-ink transition hover:scale-[1.03]"
+          className="mt-8 rounded-lg bg-white px-8 py-3 font-bold text-brand shadow-lg transition hover:-translate-y-1 hover:shadow-xl"
         >
           Empezar gratis
         </button>
@@ -400,8 +397,8 @@ function CTA({ onGetStarted }: LandingProps) {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/10 py-10 text-center text-sm text-slate-500">
-      <p>© {new Date().getFullYear()} The Next Craft. Hecho con dedicación.</p>
+    <footer className="border-t border-white/5 py-10 text-center text-sm font-medium text-slate-600">
+      <p>© {new Date().getFullYear()} MentorMatch. Construido con Convex.</p>
     </footer>
   );
 }
@@ -420,7 +417,7 @@ export default function Landing(props: LandingProps) {
       </main>
       <Footer />
 
-      {/* Mascota fija en la esquina inferior derecha */}
+      {/* Mascota */}
       <div className="fixed bottom-4 right-4 z-40 hidden sm:block">
         <Mascot />
       </div>

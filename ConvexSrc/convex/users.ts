@@ -1,11 +1,63 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { auth } from "./auth";
 
-// --- Registro y Roles ---
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await auth.getUserId(ctx);
+    if (userId === null) return null;
+    const user = await ctx.db.get(userId);
+    if (!user) return null;
+    
+    // Si no tiene rol, significa que le falta completar su perfil
+    if (!user.rol) {
+      return { _id: user._id, email: user.email, profile: null };
+    }
+    
+    return {
+      _id: user._id,
+      email: user.email,
+      profile: {
+        fullName: user.nombre + " " + user.apellido,
+        role: user.rol,
+      }
+    };
+  }
+});
+
+export const completeProfile = mutation({
+  args: { fullName: v.string(), role: v.union(v.literal("student"), v.literal("mentor")) },
+  handler: async (ctx, args) => {
+    const userId = await auth.getUserId(ctx);
+    if (userId === null) throw new Error("No autenticado");
+    
+    const [nombre, ...apellidos] = args.fullName.split(" ");
+    const apellido = apellidos.join(" ");
+
+    await ctx.db.patch(userId, {
+      nombre: nombre || "Usuario",
+      apellido: apellido || "",
+      rol: args.role
+    });
+
+    if (args.role === "mentor") {
+      await ctx.db.insert("mentors", {
+        userId,
+        dni: "Pendiente", // En la hackathon podríamos pedir esto en otra pantalla o aquí
+        celular: "Pendiente",
+        correoPersonal: "Pendiente",
+        calificacionPromedio: 0,
+        numeroDeResenas: 0
+      });
+    }
+  }
+});
+// --- Registro y Roles (Legacy/Testing) ---
 export const registrarUsuarioBase = mutation({
   args: { nombre: v.string(), apellido: v.string(), email: v.string(), avatarUrl: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const existente = await ctx.db.query("users").withIndex("by_email", q => q.eq("email", args.email)).first();
+    const existente = await ctx.db.query("users").withIndex("email", q => q.eq("email", args.email)).first();
     if (existente) return existente._id;
     return await ctx.db.insert("users", { ...args, rol: "student" });
   },
@@ -17,7 +69,7 @@ export const registrarMentorDirecto = mutation({
     dni: v.string(), celular: v.string(), correoPersonal: v.string()
   },
   handler: async (ctx, args) => {
-    const existente = await ctx.db.query("users").withIndex("by_email", q => q.eq("email", args.email)).first();
+    const existente = await ctx.db.query("users").withIndex("email", q => q.eq("email", args.email)).first();
     if (existente) throw new Error("El email ya está registrado");
     const userId = await ctx.db.insert("users", {
       nombre: args.nombre, apellido: args.apellido, email: args.email, avatarUrl: args.avatarUrl, rol: "mentor"
@@ -44,7 +96,7 @@ export const mejorarAMentor = mutation({
 export const getPerfilPorEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db.query("users").withIndex("by_email", q => q.eq("email", args.email)).first();
+    return await ctx.db.query("users").withIndex("email", q => q.eq("email", args.email)).first();
   }
 });
 

@@ -11,6 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@auth/core": "^0.41.3",
+    "@convex-dev/auth": "^0.0.95",
     "@tailwindcss/vite": "^4.3.3",
     "convex": "^1.45.0",
     "framer-motion": "^13.1.1",

@@ -1,26 +1,33 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 export function AnimatedBackground() {
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   return (
-    <div className="animated-gradient fixed inset-0 -z-10 overflow-hidden">
+    <>
+      <div className="fixed inset-0 z-[-1] bg-grid" />
+      
+      {/* Custom Cursor Ring */}
       <motion.div
-        className="blob"
-        style={{ background: "#6d5efc", width: 480, height: 480, top: -120, left: -80 }}
-        animate={{ x: [0, 60, 0], y: [0, 40, 0] }}
-        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+        className="fixed top-0 left-0 z-[100] pointer-events-none h-8 w-8 rounded-full border-2 border-brand-2 mix-blend-screen hidden md:block"
+        animate={{ x: mousePos.x - 16, y: mousePos.y - 16 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28, mass: 0.5 }}
       />
+      {/* Custom Cursor Dot */}
       <motion.div
-        className="blob"
-        style={{ background: "#22d3ee", width: 420, height: 420, top: 120, right: -100 }}
-        animate={{ x: [0, -50, 0], y: [0, 60, 0] }}
-        transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }}
+        className="fixed top-0 left-0 z-[100] pointer-events-none h-2 w-2 rounded-full bg-brand-2 hidden md:block"
+        animate={{ x: mousePos.x - 4, y: mousePos.y - 4 }}
+        transition={{ type: "spring", stiffness: 1000, damping: 40, mass: 0.1 }}
       />
-      <motion.div
-        className="blob"
-        style={{ background: "#f472b6", width: 360, height: 360, bottom: -120, left: "35%" }}
-        animate={{ x: [0, 40, 0], y: [0, -40, 0] }}
-        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-      />
-    </div>
+    </>
   );
 }
